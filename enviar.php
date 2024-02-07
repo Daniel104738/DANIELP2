@@ -22,6 +22,10 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
+// Check for uploaded file (if applicable)
+$file = $_FILES['archivo'];
+$hasFile = $file['error'] === UPLOAD_ERR_OK;
+
 // Configure PHPMailer
 $mail = new PHPMailer(true);
 $mail->isSMTP();
@@ -41,6 +45,15 @@ $mail->isHTML(true);
 $mail->Subject = "Nuevo Mensaje de Contacto";
 $mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $name<br>Email: $email<br>Mensaje: $message";
 
+    if ($hasFile) {
+        try {
+        $mail->addAttachment($file['tmp_name'], $file['name']);
+        } catch (Exception $e) {
+        http_response_code(500); // Internal Server Error
+        echo "Error al adjuntar el archivo: " . $e->getMessage();
+        exit();
+        }
+    }
 
     // Send email to Zoho
     $mail->send();
