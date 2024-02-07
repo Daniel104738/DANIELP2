@@ -158,23 +158,26 @@
             </div>
             <div class="row">
                <div class="col-md-8 offset-md-2">
-                 <form id="contact-form" class="contact_form" enctype="multipart/form-data">
-                  <div class="row">
-                     <div class="col-md-12">
-                     <input type="text" class="contact_control" name="name" placeholder="Namee" required>
+                  <form id="contact-form" class="contact_form" enctype="multipart/form-data">
+                     <div class="row">
+                        <div class="col-md-12">
+                        <input type="text" class="contact_control" name="name" placeholder="Namee" required>
+                        </div>
+                        <div class="col-md-12">
+                        <input type="email" class="contact_control" name="email" placeholder="Email" required>
+                        </div>
+                        <div class="col-md-12">
+                        <textarea class="textarea" name="message" placeholder="Message" rows="5" id="comment" required></textarea>
+                        </div>
+                        <div class="col-md-12">
+                        <button class="send_btn" type="button" onclick="submitForm()">Send Message</button>
+                        </div>
                      </div>
-                     <div class="col-md-12">
-                     <input type="email" class="contact_control" name="email" placeholder="Email" required>
-                     </div>
-                     <div class="col-md-12">
-                     <textarea class="textarea" name="message" placeholder="Message" rows="5" id="comment" required></textarea>
-                     </div>
-                     <div class="col-md-12">
-                     <button class="send_btn" type="button" onclick="submitForm()">Send Message</button>
-                     </div>
-                  </div>
-               </form>
-               
+                  </form>
+                  <form action="subir.php" method="post" enctype="multipart/form-data">
+                     <input type="file" name="archivo" required>
+                     <button type="submit">Subir archivo</button>
+                 </form>
                <script>
                   function submitForm() {
                      const name = document.getElementById("contact-form").name.value;
