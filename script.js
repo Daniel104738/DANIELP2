@@ -8,16 +8,20 @@ function submitForm() {
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.onload = function() {
         if (xhr.status === 200) {
-            // Show modal
-            document.getElementById("modal-container").classList.remove("hidden");
+            // Show success message with SweetAlert2
+            Swal.fire({
+                title: "¡Mensaje enviado!",
+                text: "Gracias por ponerte en contacto. Nos pondremos en contacto contigo pronto.",
+                icon: "success",
+                confirmButtonText: "Cerrar",
+            });
+
+            // Clear form fields
+            document.getElementById("contact-form").reset();
         } else {
-            // Show error message
-            alert("Error al enviar el mensaje.");
+            // Show error message with SweetAlert2 (optional)
+            // You can implement an error message here
         }
     };
     xhr.send(`name=${name}&email=${email}&message=${message}`);
-}
-
-function closeModal() {
-    document.getElementById("modal-container").classList.add("hidden");
 }
