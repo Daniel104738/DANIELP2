@@ -5,138 +5,56 @@ use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Validar los campos del formulario
-    if (empty($_POST['name']) || empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-        http_response_code(500);
-        exit();
-    }
+// Validate and sanitize inputs from AJAX request
+$name = htmlspecialchars($_POST['name']);
+$email = htmlspecialchars($_POST['email']);
+$message = htmlspecialchars($_POST['message']);
 
-    // Obtener datos del formulario y sanearlos
-    $name = htmlspecialchars($_POST['name']);
-    $email = htmlspecialchars($_POST['email']);
-    $message = htmlspecialchars($_POST['message']);
+// Check for empty fields
+if (empty($name) || empty($email) || empty($message)) {
+    http_response_code(400); // Bad request
+    exit();
+}
 
-    // Configuración de PHPMailer
-    $mail = new PHPMailer(true);
+// Validate email format
+if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(400); // Bad request
+    exit();
+}
 
-    $mail->isSMTP();
-    $mail->Host = 'smtp.zoho.com'; // Reemplaza con tu servidor SMTP
-    $mail->SMTPAuth = true;
-    $mail->Username = 'cafecito@pinedodaniel.shop'; // Reemplaza con tu correo electrónico
-    $mail->Password = 'jaziulxd'; // Reemplaza con tu contraseña
-    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port = 587;
+// Configure PHPMailer
+$mail = new PHPMailer(true);
+$mail->isSMTP();
+$mail->Host = 'smtp.zoho.com';
+$mail->SMTPAuth = true;
+$mail->Username = 'cafecito@pinedodaniel.shop';
+$mail->Password = 'jaziulxd';
+$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+$mail->Port = 587;
 
-    // Configurar remitente y destinatario para Zoho
-    $mail->setFrom('cafecito@pinedodaniel.shop', 'Daniel');
-    $mail->addAddress('cafecito@pinedodaniel.shop'); // Correo de Zoho
+// Set sender and recipient for Zoho
+$mail->setFrom('cafecito@pinedodaniel.shop', 'Daniel');
+$mail->addAddress('cafecito@pinedodaniel.shop'); // To your Zoho email
 
-    // Configurar contenido del mensaje para Zoho
-    $mail->isHTML(true);
-    $mail->Subject = "Nuevo Mensaje de Contacto";
-    $mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $name<br>Email: $email<br>Mensaje: $message";
+// Set content for Zoho
+$mail->isHTML(true);
+$mail->Subject = "Nuevo Mensaje de Contacto";
+$mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $name<br>Email: $email<br>Mensaje: $message";
 
-    // Si se ha enviado un archivo adjunto
-    if (!empty($_FILES['adjunto']['name'])) {
-        $adjunto_nombre = $_FILES['adjunto']['name'];
-        $adjunto_tmp_name = $_FILES['adjunto']['tmp_name'];
+$fileName = $_FILES['file']['name'];
+$filePath = $_FILES['file']['tmp_name'];
+$mail->addAttachment($filePath, $fileName); // Attach the file with its original name
 
-        if ($_FILES['adjunto']['error'] !== UPLOAD_ERR_OK) {
-            http_response_code(500);
-            echo "Error al subir el archivo: " . $_FILES['adjunto']['error'];
-            exit();
-        }
+    // Send email to Zoho
+    $mail->send();
 
-        // Ruta donde se guardarán los archivos adjuntos
-        $ruta_destino = 'adjuntos/' . $adjunto_nombre;
+    // Send confirmation email to user
+    $mail->clearAddresses();
+    $mail->addAddress($email);
+    $mail->Subject = "Gracias por ponerte en contacto";
+    $mail->Body = "¡Gracias por ponerte en contacto! Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.";
 
-        // Mover el archivo cargado a la ubicación deseada
-        if (!move_uploaded_file($adjunto_tmp_name, $ruta_destino)) {
-            http_response_code(500);
-            echo "Error al mover el archivo adjunto";
-            exit();
-        }
+    $mail->send();
 
-        // Agregar el archivo adjunto al correo
-        $mail->addAttachment($ruta_destino);
-    }
-
-    try {
-        // Enviar correo a Zoho
-        $mail->send();
-
-        // Enviar correo de agradecimiento al usuario
-        $mail->clearAddresses();
-        $mail->addAddress($email);
-        $mail->Subject = "Gracias por ponerte en contacto";
-        $mail->Body = "<!DOCTYPE html>
-        <html lang='es'>
-        <head>
-            <meta charset='UTF-8'>
-            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-            <title>Agradecimiento</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    background-color: #f2f2f2;
-                    margin: 0;
-                    padding: 0;
-                }
-                .container {
-                    border: 1px solid #dddddd;
-                    padding: 20px;
-                    margin: 20px auto;
-                    background-color: #ffffff;
-                    max-width: 600px;
-                    border-radius: 5px;
-                    text-align: center;
-                }
-                h1 {
-                    color: #4285f4;
-                    font-size: 24px;
-                    margin-bottom: 20px;
-                }
-                p {
-                    color: #333333;
-                    font-size: 
-
-                strong {
-                    font-weight: bold;
-                }
-                a {
-                    color: #4285f4;
-                    text-decoration: none;
-                }
-                a:hover {
-                    text-decoration: underline;
-                }
-                </style>
-                </head>
-                <body>
-                    <div class='container'>
-                        <h1>¡Gracias por ponerte en contacto!</h1>
-                        <p>Estimado <strong>$name</strong>,</p>
-                        <p>Hemos recibido tu mensaje y te agradecemos por tu interés en nuestra empresa.</p>
-                        <p>Nos pondremos en contacto contigo pronto en la dirección de correo electrónico <strong>$email</strong> proporcionada.</p>
-                        <p><em>Atentamente,<br>El Equipo de [BUHO S.A.C]</em></p>
-                        <p><a href='https://www.pinedodaniel.shop' target='_blank'>Visita nuestro sitio web</a> para obtener más información sobre nuestros productos y servicios.</p>
-                    </div>
-                </body>
-                </html>";
-        
-                $mail->send();
-        
-                echo "Mensaje enviado correctamente";
-            } catch (Exception $e) {
-                http_response_code(500);
-                echo "Error al enviar el mensaje: " . $e->getMessage();
-                exit();
-            }
-        } else {
-            // Redirigir si no es una solicitud POST
-            header("Location: contact.html");
-            exit();
-        }
-?>
-        
+    // Send successful response to AJAX request
+    echo "Mensaje enviado correctamente";
