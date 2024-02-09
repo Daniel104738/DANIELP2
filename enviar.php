@@ -5,24 +5,48 @@ use PHPMailer\PHPMailer\Exception;
 
 require 'vendor/autoload.php';
 
-// Validate and sanitize inputs from AJAX request
-$name = htmlspecialchars($_POST['name']);
-$email = htmlspecialchars($_POST['email']);
-$message = htmlspecialchars($_POST['message']);
+// Validar y sanitizar entradas del request AJAX
+$nombre = htmlspecialchars($_POST['name']);
+$correo = htmlspecialchars($_POST['email']);
+$mensaje = htmlspecialchars($_POST['message']);
 
-// Check for empty fields
-if (empty($name) || empty($email) || empty($message)) {
-    http_response_code(400); // Bad request
+// Validar campos vacíos
+if (empty($nombre) || empty($correo) || empty($mensaje)) {
+    http_response_code(400); // Solicitud incorrecta
     exit();
 }
 
-// Validate email format
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    http_response_code(400); // Bad request
+// Validar formato de email
+if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+    http_response_code(400); // Solicitud incorrecta
     exit();
 }
 
-// Configure PHPMailer
+// Validar archivo
+if (isset($_FILES['file']) && $_FILES['file']['error'] === 0) {
+    // Validar tamaño de archivo
+    if ($_FILES['file']['size'] > 1048576) { // Límite de 1MB
+        echo json_encode(['error' => 'El archivo es demasiado grande. Límite: 1MB']);
+        exit();
+    }
+
+    // Validar tipo de archivo
+    $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf'];
+    $extension = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
+    if (!in_array($extension, $extensionesPermitidas)) {
+        echo json_encode(['error' => 'Tipo de archivo no permitido. Permitidos: ' . implode(', ', $extensionesPermitidas)]);
+        exit();
+    }
+
+    // Guardar archivo
+    $rutaDestino = "uploads/" . $_FILES['file']['name'];
+    move_uploaded_file($_FILES['file']['tmp_name'], $rutaDestino);
+
+    // Adjuntar archivo al correo
+    $mail->addAttachment($rutaDestino, $_FILES['file']['name']);
+}
+
+// Configurar PHPMailer
 $mail = new PHPMailer(true);
 $mail->isSMTP();
 $mail->Host = 'smtp.zoho.com';
@@ -32,29 +56,25 @@ $mail->Password = 'jaziulxd';
 $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
 $mail->Port = 587;
 
-// Set sender and recipient for Zoho
+// Configurar remitente y destinatario para Zoho
 $mail->setFrom('cafecito@pinedodaniel.shop', 'Daniel');
-$mail->addAddress('cafecito@pinedodaniel.shop'); // To your Zoho email
+$mail->addAddress('cafecito@pinedodaniel.shop'); // A tu correo de Zoho
 
-// Set content for Zoho
+// Configurar contenido para Zoho
 $mail->isHTML(true);
 $mail->Subject = "Nuevo Mensaje de Contacto";
-$mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $name<br>Email: $email<br>Mensaje: $message";
+$mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $nombre<br>Email: $correo<br>Mensaje: $mensaje";
 
-$fileName = $_FILES['file']['name'];
-$filePath = $_FILES['file']['tmp_name'];
-$mail->addAttachment($filePath, $fileName); // Attach the file with its original name
+// Enviar correo a Zoho
+$mail->send();
 
-    // Send email to Zoho
-    $mail->send();
+// Enviar correo de confirmación al usuario
+$mail->clearAddresses();
+$mail->addAddress($correo);
+$mail->Subject = "Gracias por ponerte en contacto";
+$mail->Body = "¡Gracias por ponerte en contacto! Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.";
 
-    // Send confirmation email to user
-    $mail->clearAddresses();
-    $mail->addAddress($email);
-    $mail->Subject = "Gracias por ponerte en contacto";
-    $mail->Body = "¡Gracias por ponerte en contacto! Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.";
+$mail->send();
 
-    $mail->send();
-
-    // Send successful response to AJAX request
-    echo "Mensaje enviado correctamente";
+// Enviar respuesta exitosa al request AJAX
+echo json_encode(['success' => 'Mensaje enviado correctamente']);
