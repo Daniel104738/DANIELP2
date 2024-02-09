@@ -3,78 +3,143 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php';
+require 'vendor/phpmailer/phpmailer/src/Exception.php';
+require 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require 'vendor/phpmailer/phpmailer/src/SMTP.php';
 
-// Validar y sanitizar entradas del request AJAX
-$nombre = htmlspecialchars($_POST['name']);
-$correo = htmlspecialchars($_POST['email']);
-$mensaje = htmlspecialchars($_POST['message']);
-
-// Validar campos vacíos
-if (empty($nombre) || empty($correo) || empty($mensaje)) {
-    http_response_code(400); // Solicitud incorrecta
-    exit();
-}
-
-// Validar formato de email
-if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-    http_response_code(400); // Solicitud incorrecta
-    exit();
-}
-
-// Validar archivo
-if (isset($_FILES['file']) && $_FILES['file']['error'] === 0) {
-    // Validar tamaño de archivo
-    if ($_FILES['file']['size'] > 1048576) { // Límite de 1MB
-        echo json_encode(['error' => 'El archivo es demasiado grande. Límite: 1MB']);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validar los campos del formulario
+    if (empty($_POST['name']) || empty($_POST['msg']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+        http_response_code(500);
         exit();
     }
 
-    // Validar tipo de archivo
-    $extensionesPermitidas = ['jpg', 'jpeg', 'png', 'pdf'];
-    $extension = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-    if (!in_array($extension, $extensionesPermitidas)) {
-        echo json_encode(['error' => 'Tipo de archivo no permitido. Permitidos: ' . implode(', ', $extensionesPermitidas)]);
-        exit();
+    // Obtener datos del formulario y sanearlos
+    $name = htmlspecialchars($_POST['name']);
+    $email = htmlspecialchars($_POST['email']);
+    $message = htmlspecialchars($_POST['msg']);
+
+    // Configuración de PHPMailer
+    $mail = new PHPMailer(true);
+    
+    $mail->isSMTP();
+    $mail->Host = 'smtp.zoho.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'cafecito@pinedodaniel.shop';
+    $mail->Password = 'jaziulxd';
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+    $mail->Port=587;
+
+    // Configurar remitente y destinatario para Zoho
+    $mail->setFrom('cafecito@pinedodaniel.shop', 'daniel');
+    $mail->addAddress('cafecito@pinedodaniel.shop'); // Correo de Zoho
+
+    // Configurar contenido del mensaje para Zoho
+    $mail->isHTML(true);
+    $mail->Subject = "Nuevo Mensaje de Contacto";
+    $mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $name<br>Email: $email<br>Mensaje: $message";
+
+    // Si se ha enviado un archivo adjunto
+    if (!empty($_FILES['adjunto']['name'])) {
+        $adjunto_nombre = $_FILES['adjunto']['name'];
+        $adjunto_tmp_name = $_FILES['adjunto']['tmp_name'];
+
+        if ($_FILES['adjunto']['error'] !== UPLOAD_ERR_OK) {
+            http_response_code(500);
+            echo "Error al subir el archivo: " . $_FILES['adjunto']['error'];
+            exit();
+        }
+
+        // Definir la ruta donde deseas guardar los archivos adjuntos
+        $ruta_destino = 'adjuntos/' . $adjunto_nombre;
+
+        // Mover el archivo cargado a la ubicación deseada
+        if (!move_uploaded_file($adjunto_tmp_name, $ruta_destino)) {
+            http_response_code(500);
+            echo "Error al mover el archivo adjunto";
+            exit();
+        }
+
+        // Agregar el archivo adjunto al correo
+        $mail->addAttachment($ruta_destino);
     }
 
-    // Guardar archivo
-    $rutaDestino = "uploads/" . $_FILES['file']['name'];
-    move_uploaded_file($_FILES['file']['tmp_name'], $rutaDestino);
+    try {
+        // Enviar correo a Zoho
+        $mail->send();
 
-    // Adjuntar archivo al correo
-    $mail->addAttachment($rutaDestino, $_FILES['file']['name']);
+        // Enviar correo de agradecimiento al usuario
+        $mail->clearAddresses();
+        $mail->addAddress($email);
+        $mail->Subject = "Gracias por ponerte en contacto";
+        $mail->Body = "<!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Agradecimiento</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f2f2f2;
+                    margin: 0;
+                    padding: 0;
+                }
+                .container {
+                    border: 1px solid #dddddd;
+                    padding: 20px;
+                    margin: 20px auto;
+                    background-color: #ffffff;
+                    max-width: 600px;
+                    border-radius: 5px;
+                    text-align: center;
+                }
+                h1 {
+                    color: #4285f4;
+                    font-size: 24px;
+                    margin-bottom: 20px;
+                }
+                p {
+                    color: #333333;
+                    font-size: 16px;
+                    line-height: 1.6;
+                    margin-bottom: 10px;
+                }
+                strong {
+                    font-weight: bold;
+                }
+                a {
+                    color: #4285f4;
+                    text-decoration: none;
+                }
+                a:hover {
+                    text-decoration: underline;
+                }
+            </style>
+        </head>
+        <body>
+            <div class='container'>
+                <h1>¡Gracias por Ponerte en Contacto!</h1>
+                <p>Estimado <strong>$name</strong>,</p>
+                <p>Hemos recibido tu mensaje y te agradecemos por tu interés en nuestra empresa.</p>
+                <p>Nos pondremos en contacto contigo pronto en la dirección de correo electrónico <strong>$email</strong> proporcionada.</p>
+                <p><em>Atentamente,<br>El Equipo de [BUHO S.A.C]</em></p>
+                <p><a href='https://www.tuempresa.com' target='_blank'>Visita nuestro sitio web</a> para obtener más información sobre nuestros productos y servicios.</p>
+            </div>
+        </body>
+        </html>";
+
+        $mail->send();
+
+        echo "Mensaje enviado correctamente";
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo "Error al enviar el mensaje";
+        exit();
+    }
+} else {
+    // Redirigir si no es una solicitud POST
+    header("Location: contact.html");
+  exit();
 }
-
-// Configurar PHPMailer
-$mail = new PHPMailer(true);
-$mail->isSMTP();
-$mail->Host = 'smtp.zoho.com';
-$mail->SMTPAuth = true;
-$mail->Username = 'cafecito@pinedodaniel.shop';
-$mail->Password = 'jaziulxd';
-$mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-$mail->Port = 587;
-
-// Configurar remitente y destinatario para Zoho
-$mail->setFrom('cafecito@pinedodaniel.shop', 'Daniel');
-$mail->addAddress('cafecito@pinedodaniel.shop'); // A tu correo de Zoho
-
-// Configurar contenido para Zoho
-$mail->isHTML(true);
-$mail->Subject = "Nuevo Mensaje de Contacto";
-$mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $nombre<br>Email: $correo<br>Mensaje: $mensaje";
-
-// Enviar correo a Zoho
-$mail->send();
-
-// Enviar correo de confirmación al usuario
-$mail->clearAddresses();
-$mail->addAddress($correo);
-$mail->Subject = "Gracias por ponerte en contacto";
-$mail->Body = "¡Gracias por ponerte en contacto! Hemos recibido tu mensaje y nos pondremos en contacto contigo pronto.";
-
-$mail->send();
-
-// Enviar respuesta exitosa al request AJAX
-echo json_encode(['success' => 'Mensaje enviado correctamente']);
+?>

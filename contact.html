@@ -145,7 +145,60 @@
       </header>
       <!-- end header inner -->
       <!-- end header -->
- 
+      
+      <script>
+         function enviarCorreo() {
+           var formData = new FormData($("#miFormulario")[0]);
+     
+           $.ajax({
+             type: "POST",
+             url: "enviar.php",
+             data: formData,
+             processData: false,
+             contentType: false,
+             success: function (response) {
+               // Manejar la respuesta del servidor
+               console.log(response);
+     
+               // Mostrar mensaje de éxito con SweetAlert2
+               Swal.fire({
+                 icon: 'success',
+                 title: 'Mensaje enviado correctamente',
+                 showConfirmButton: false,
+                 timer: 1500
+               });
+     
+               limpiarCampos();
+               // Mostrar la ventana emergente
+     
+             },
+             error: function (error) {
+               // Manejar errores
+               console.error(error);
+             }
+           });
+         }
+     
+     
+     
+         function mostrarPopup() {
+           document.getElementById('popup').style.display = 'block';
+         }
+     
+         function cerrarPopup() {
+           document.getElementById('popup').style.display = 'none';
+         }
+     
+         function limpiarCampos() {
+           // Limpiar los valores de los campos del formulario
+           // Obtener el formulario por su ID
+           var formulario = document.getElementById("miFormulario");
+     
+           // Resetear el formulario
+           formulario.reset();
+         }  
+       </script>
+
       <!-- contact  section -->
       <div id="contact" class="contact ">
          <div class="container">
@@ -158,70 +211,40 @@
             </div>
             <div class="row">
                <div class="col-md-8 offset-md-2">
-                  <form id="contact-form" class="contact_form" enctype="multipart/form-data">
+                  <form action="enviar.php" method="POST" id="miFormulario" class="contact_form" enctype="multipart/form-data">
                      <div class="row">
                          <div class="col-md-12">
-                             <input type="text" class="contact_control" name="name" placeholder="Name" required>
+                           <input type="text" class="contact_control" placeholder="Name" name="name" required="">
                          </div>
                          <div class="col-md-12">
-                             <input type="email" class="contact_control" name="email" placeholder="Email" required>
+                           <input type="email" class="contact_control" placeholder="Email" name="email" required="">
                          </div>
                          <div class="col-md-12">
-                             <textarea class="textarea" name="message" placeholder="Message" rows="5" id="comment" required></textarea>
+                             <input type="text" class="contact_control" placeholder="Message" name="msg" required="">
                          </div>
                          <div class="col-md-12">
-                             <input type="file" class="contact_control" name="file" required>
+                           <input type="file" name="adjunto" id="adjunto" multiple>
                          </div>
                          <div class="col-md-12">
-                             <button class="send_btn" type="button" onclick="submitForm()">Send Message</button>
+                           <input class="send_btn" type="button" value="Enviar" onclick="enviarCorreo()">
                          </div>
                      </div>
+                     <div id="popup" style="display:none;">
+                        <p>Mensaje enviado correctamente</p>
+                        <button onclick="cerrarPopup()">Cerrar</button>
+                      </div>
+                      <script>
+                        function mostrarPopup() {
+                          document.getElementById('popup').style.display = 'block';
+                        }
+          
+                        function cerrarPopup() {
+                          document.getElementById('popup').style.display = 'none';
+                        }
+                      </script>
+
                  </form>
-               
-               <script>
-                  function submitForm() {
-                     const name = document.getElementById("contact-form").name.value;
-                     const email = document.getElementById("contact-form").email.value;
-                     const message = document.getElementById("contact-form").message.value;
-                     const file = document.getElementById("contact-form").file.files[0]; // Access the selected file
-                   
-                     const xhr = new XMLHttpRequest();
-                     xhr.open("POST", "enviar.php");
-                     xhr.setRequestHeader("Content-Type", "multipart/form-data"); // Important for file uploads
-                   
-                     const formData = new FormData();
-                     formData.append("name", name);
-                     formData.append("email", email);
-                     formData.append("message", message);
-                     formData.append("file", file); // Attach the file
-                   
-                     xhr.onload = function() {
-                       if (xhr.status === 200) {
-                             // Show success message with SweetAlert2
-                             Swal.fire({
-                                 title: "¡Mensaje enviado!",
-                                 text: "Gracias por ponerte en contacto. Nos pondremos en contacto contigo pronto.",
-                                 icon: "success",
-                                 confirmButtonText: "Cerrar",
-                             });
-                 
-                             // Clear form fields
-                             document.getElementById("contact-form").reset();
-                         } else {
-                              Swal.fire({
-                                 title: "¡Error al enviar el mensaje!",
-                                 text: "Parece que hubo un error al enviar el formulario",
-                                 icon: "error",
-                                 confirmButtonText: "Cerrar",
-                              });
-                             // Show error message with SweetAlert2 (optional)
-                             // You can implement an error message here
-                         }
-                     };
-                     xhr.send(formData);
-                 }
-                 
-               </script>
+            
 
                <!--div id="modal-container" class="hidden">
                   <div id="modal">
