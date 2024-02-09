@@ -22,10 +22,6 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
-// Check for uploaded file (if applicable)
-$file = $_FILES['archivo'];
-$hasFile = $file['error'] === UPLOAD_ERR_OK;
-
 // Configure PHPMailer
 $mail = new PHPMailer(true);
 $mail->isSMTP();
@@ -45,15 +41,31 @@ $mail->isHTML(true);
 $mail->Subject = "Nuevo Mensaje de Contacto";
 $mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de tu sitio web.<br><br>Detalles:<br><br>Nombre: $name<br>Email: $email<br>Mensaje: $message";
 
-    if ($hasFile) {
-        try {
-        $mail->addAttachment($file['tmp_name'], $file['name']);
-        } catch (Exception $e) {
-        http_response_code(500); // Internal Server Error
-        echo "Error al adjuntar el archivo: " . $e->getMessage();
+
+
+if (!empty($_FILES['archivo']['name'])) {
+    $archivo_nombre = $_FILES['archivo']['name'];
+    $archivo_tmp_name = $_FILES['archivo']['tmp_name'];
+
+    if ($_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+        http_response_code(500);
+        echo "Error al subir el archivo: " . $_FILES['archivo']['error'];
         exit();
-        }
     }
+
+    // Definir la ruta donde deseas guardar los archivos
+    $ruta_destino = 'archivos/' . $archivo_nombre;
+
+    // Mover el archivo cargado a la ubicación deseada
+    if (!move_uploaded_file($archivo_tmp_name, $ruta_destino)) {
+        http_response_code(500);
+        echo "Error al mover el archivo";
+        exit();
+    }
+
+    // Agregar el archivo archivo al correo
+    $mail->addAttachment($ruta_destino);
+}
 
     // Send email to Zoho
     $mail->send();
@@ -68,3 +80,4 @@ $mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de 
 
     // Send successful response to AJAX request
     echo "Mensaje enviado correctamente";
+?>

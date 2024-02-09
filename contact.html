@@ -175,48 +175,66 @@
                         <div class="col-md-12">
                            <button class="send_btn" type="button" onclick="submitForm()">Send Message</button>
                         </div>
-
+                        <div id="popup" style="display:none;">
+                           <p>Mensaje enviado correctamente</p>
+                           <button onclick="cerrarPopup()">Cerrar</button>
                      </div>
                   </form>
 
                <script>
                   function submitForm() {
-                     const name = document.getElementById("contact-form").name.value;
-                     const email = document.getElementById("contact-form").email.value;
-                     const message = document.getElementById("contact-form").message.value;
-                 
-                     const xhr = new XMLHttpRequest();
-                     xhr.open("POST", "enviar.php");
-                     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                     xhr.onload = function() {
-                         if (xhr.status === 200) {
-                             // Show success message with SweetAlert2
-                             Swal.fire({
-                                 title: "¡Mensaje enviado!",
-                                 text: "Gracias por ponerte en contacto. Nos pondremos en contacto contigo pronto.",
-                                 icon: "success",
-                                 confirmButtonText: "Cerrar",
-                             });
-                 
-                             // Clear form fields
-                             document.getElementById("contact-form").reset();
-                         } else {
-                             // Show error message with SweetAlert2 (optional)
-                             // You can implement an error message here
-                         }
-                     };
-                     xhr.send(`name=${name}&email=${email}&message=${message}`);
-                 }
+                     var formData = new FormData($("#contact-form")[0]);
+
+                     $.ajax({
+                     type: "POST",
+                     url: "enviar.php",
+                     data: formData,
+                     processData: false,
+                     contentType: false,
+                     success: function (response) {
+                        // Manejar la respuesta del servidor
+                        console.log(response);
+
+                        // Mostrar mensaje de éxito con SweetAlert2
+                        Swal.fire({
+                           icon: 'success',
+                           title: 'Mensaje enviado correctamente',
+                           showConfirmButton: false,
+                           timer: 1500
+                        });
+
+                        limpiarCampos();
+                        // Mostrar la ventana emergente
+
+                     },
+                     error: function (error) {
+                        // Manejar errores
+                        console.error(error);
+                     }
+                     });
+                  }
+
+
+
+                  function mostrarPopup() {
+                     document.getElementById('popup').style.display = 'block';
+                  }
+
+                  function cerrarPopup() {
+                     document.getElementById('popup').style.display = 'none';
+                  }
+
+                  function limpiarCampos() {
+                     // Limpiar los valores de los campos del formulario
+                     // Obtener el formulario por su ID
+                     var formulario = document.getElementById("contact-form");
+
+                     // Resetear el formulario
+                     formulario.reset();
+                  }  
                  
                </script>
-
-               <!--div id="modal-container" class="hidden">
-                  <div id="modal">
-                      <h2>¡Mensaje enviado!</h2>
-                      <p>Gracias por ponerte en contacto. Nos pondremos en contacto contigo pronto.</p>
-                      <button type="button" onclick="closeModal()">Cerrar</button>
-                  </div>
-              </div-->
+               
                   </div>
                </div>
             </div>
