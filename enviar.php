@@ -3,13 +3,11 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/phpmailer/phpmailer/src/Exception.php';
-require 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require 'vendor/phpmailer/phpmailer/src/SMTP.php';
+require 'vendor/autoload.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validar los campos del formulario
-    if (empty($_POST['name']) || empty($_POST['msg']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+    if (empty($_POST['name']) || empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
         http_response_code(500);
         exit();
     }
@@ -21,17 +19,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Configuración de PHPMailer
     $mail = new PHPMailer(true);
-    
+
     $mail->isSMTP();
-    $mail->Host = 'smtp.zoho.com';
+    $mail->Host = 'smtp.zoho.com'; // Reemplaza con tu servidor SMTP
     $mail->SMTPAuth = true;
-    $mail->Username = 'cafecito@pinedodaniel.shop';
-    $mail->Password = 'jaziulxd';
+    $mail->Username = 'cafecito@pinedodaniel.shop'; // Reemplaza con tu correo electrónico
+    $mail->Password = 'jaziulxd'; // Reemplaza con tu contraseña
     $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port=587;
+    $mail->Port = 587;
 
     // Configurar remitente y destinatario para Zoho
-    $mail->setFrom('cafecito@pinedodaniel.shop', 'daniel');
+    $mail->setFrom('cafecito@pinedodaniel.shop', 'Daniel');
     $mail->addAddress('cafecito@pinedodaniel.shop'); // Correo de Zoho
 
     // Configurar contenido del mensaje para Zoho
@@ -50,7 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Definir la ruta donde deseas guardar los archivos adjuntos
+        // Ruta donde se guardarán los archivos adjuntos
         $ruta_destino = 'adjuntos/' . $adjunto_nombre;
 
         // Mover el archivo cargado a la ubicación deseada
@@ -73,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mail->addAddress($email);
         $mail->Subject = "Gracias por ponerte en contacto";
         $mail->Body = "<!DOCTYPE html>
-        <html lang='en'>
+        <html lang='es'>
         <head>
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
@@ -101,10 +99,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 p {
                     color: #333333;
-                    font-size: 16px;
-                    line-height: 1.6;
-                    margin-bottom: 10px;
-                }
+                    font-size: 
+
                 strong {
                     font-weight: bold;
                 }
@@ -115,31 +111,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 a:hover {
                     text-decoration: underline;
                 }
-            </style>
-        </head>
-        <body>
-            <div class='container'>
-                <h1>¡Gracias por Ponerte en Contacto!</h1>
-                <p>Estimado <strong>$name</strong>,</p>
-                <p>Hemos recibido tu mensaje y te agradecemos por tu interés en nuestra empresa.</p>
-                <p>Nos pondremos en contacto contigo pronto en la dirección de correo electrónico <strong>$email</strong> proporcionada.</p>
-                <p><em>Atentamente,<br>El Equipo de [BUHO S.A.C]</em></p>
-                <p><a href='https://www.tuempresa.com' target='_blank'>Visita nuestro sitio web</a> para obtener más información sobre nuestros productos y servicios.</p>
-            </div>
-        </body>
-        </html>";
-
-        $mail->send();
-
-        echo "Mensaje enviado correctamente";
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo "Error al enviar el mensaje";
-        exit();
-    }
-} else {
-    // Redirigir si no es una solicitud POST
-    header("Location: contact.html");
-  exit();
-}
+                </style>
+                </head>
+                <body>
+                    <div class='container'>
+                        <h1>¡Gracias por ponerte en contacto!</h1>
+                        <p>Estimado <strong>$name</strong>,</p>
+                        <p>Hemos recibido tu mensaje y te agradecemos por tu interés en nuestra empresa.</p>
+                        <p>Nos pondremos en contacto contigo pronto en la dirección de correo electrónico <strong>$email</strong> proporcionada.</p>
+                        <p><em>Atentamente,<br>El Equipo de [BUHO S.A.C]</em></p>
+                        <p><a href='https://www.pinedodaniel.shop' target='_blank'>Visita nuestro sitio web</a> para obtener más información sobre nuestros productos y servicios.</p>
+                    </div>
+                </body>
+                </html>";
+        
+                $mail->send();
+        
+                echo "Mensaje enviado correctamente";
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo "Error al enviar el mensaje: " . $e->getMessage();
+                exit();
+            }
+        } else {
+            // Redirigir si no es una solicitud POST
+            header("Location: contact.html");
+            exit();
+        }
 ?>
+        
