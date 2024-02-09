@@ -3,26 +3,25 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php';
+require 'vendor/phpmailer/phpmailer/src/Exception.php';
+require 'vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require 'vendor/phpmailer/phpmailer/src/SMTP.php';
 
-// Validate and sanitize inputs from AJAX request
-$name = htmlspecialchars($_POST['name']);
-$email = htmlspecialchars($_POST['email']);
-$message = htmlspecialchars($_POST['message']);
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Validar los campos del formulario
+    if (empty($_POST['name']) || empty($_POST['message']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+        http_response_code(500);
+        exit();
+    }
 
-// Check for empty fields
-if (empty($name) || empty($email) || empty($message)) {
-    http_response_code(400); // Bad request
-    exit();
-}
+    // Obtener datos del formulario y sanearlos
+    $name = htmlspecialchars($_POST['name']);
+    $email = htmlspecialchars($_POST['email']);
+    $message = htmlspecialchars($_POST['message']);
 
-// Validate email format
-if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    http_response_code(400); // Bad request
-    exit();
-}
 
 // Configure PHPMailer
+$mail->SMTPDebug = SMTP::DEBUG_SERVER;
 $mail = new PHPMailer(true);
 $mail->isSMTP();
 $mail->Host = 'smtp.zoho.com';
@@ -43,27 +42,27 @@ $mail->Body = "Has recibido un nuevo mensaje desde el formulario de contacto de 
 
 
 
-if (!empty($_FILES['archivo']['name'])) {
-    $archivo_nombre = $_FILES['archivo']['name'];
-    $archivo_tmp_name = $_FILES['archivo']['tmp_name'];
+if (!empty($_FILES['adjunto']['name'])) {
+    $adjunto_nombre = $_FILES['adjunto']['name'];
+    $adjunto_tmp_name = $_FILES['adjunto']['tmp_name'];
 
-    if ($_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
+    if ($_FILES['adjunto']['error'] !== UPLOAD_ERR_OK) {
         http_response_code(500);
-        echo "Error al subir el archivo: " . $_FILES['archivo']['error'];
+        echo "Error al subir el archivo: " . $_FILES['adjunto']['error'];
         exit();
     }
 
-    // Definir la ruta donde deseas guardar los archivos
-    $ruta_destino = 'archivos/' . $archivo_nombre;
+    // Definir la ruta donde deseas guardar los archivos adjuntos
+    $ruta_destino = 'adjuntos/' . $adjunto_nombre;
 
     // Mover el archivo cargado a la ubicación deseada
-    if (!move_uploaded_file($archivo_tmp_name, $ruta_destino)) {
+    if (!move_uploaded_file($adjunto_tmp_name, $ruta_destino)) {
         http_response_code(500);
-        echo "Error al mover el archivo";
+        echo "Error al mover el archivo adjunto";
         exit();
     }
 
-    // Agregar el archivo archivo al correo
+    // Agregar el archivo adjunto al correo
     $mail->addAttachment($ruta_destino);
 }
 
@@ -80,4 +79,9 @@ if (!empty($_FILES['archivo']['name'])) {
 
     // Send successful response to AJAX request
     echo "Mensaje enviado correctamente";
+}else {
+    // Redirigir si no es una solicitud POST
+    header("Location: contact.html");
+  exit();
+}
 ?>

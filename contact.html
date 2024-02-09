@@ -158,7 +158,7 @@
             </div>
             <div class="row">
                <div class="col-md-8 offset-md-2">
-                  <form id="contact-form" class="contact_form" enctype="multipart/form-data">
+                  <form id="Formulario" class="contact_form" enctype="multipart/form-data">
                      <div class="row">
                         <div class="col-md-12">
                            <input type="text" class="contact_control" name="name" placeholder="Namee" required>
@@ -170,7 +170,7 @@
                            <textarea class="textarea" name="message" placeholder="Message" rows="5" id="comment" required></textarea>
                         </div>
                         <div class="col-md-12">
-                           <input type="file" class="form-control-file" id="archivo" name="archivo">
+                           <input type="file" id="adjunto" name="adjunto">
                         </div>
                         <div class="col-md-12">
                            <button class="send_btn" type="button" onclick="submitForm()">Send Message</button>
@@ -181,59 +181,15 @@
                      </div>
                   </form>
 
-               <script>
-                  function submitForm() {
-                     var formData = new FormData($("#contact-form")[0]);
-
-                     $.ajax({
-                     type: "POST",
-                     url: "enviar.php",
-                     data: formData,
-                     processData: false,
-                     contentType: false,
-                     success: function (response) {
-                        // Manejar la respuesta del servidor
-                        console.log(response);
-
-                        // Mostrar mensaje de éxito con SweetAlert2
-                        Swal.fire({
-                           icon: 'success',
-                           title: 'Mensaje enviado correctamente',
-                           showConfirmButton: false,
-                           timer: 1500
-                        });
-
-                        limpiarCampos();
-                        // Mostrar la ventana emergente
-
-                     },
-                     error: function (error) {
-                        // Manejar errores
-                        console.error(error);
+                  <script>
+                     function mostrarPopup() {
+                       document.getElementById('popup').style.display = 'block';
                      }
-                     });
-                  }
-
-
-
-                  function mostrarPopup() {
-                     document.getElementById('popup').style.display = 'block';
-                  }
-
-                  function cerrarPopup() {
-                     document.getElementById('popup').style.display = 'none';
-                  }
-
-                  function limpiarCampos() {
-                     // Limpiar los valores de los campos del formulario
-                     // Obtener el formulario por su ID
-                     var formulario = document.getElementById("contact-form");
-
-                     // Resetear el formulario
-                     formulario.reset();
-                  }  
-                 
-               </script>
+       
+                     function cerrarPopup() {
+                       document.getElementById('popup').style.display = 'none';
+                     }
+                   </script>
                
                   </div>
                </div>
@@ -328,5 +284,58 @@
       <!-- sidebar -->
       <script src="js/jquery.mCustomScrollbar.concat.min.js"></script>
       <script src="js/custom.js"></script>
+
+      <script>
+         function enviarCorreo() {
+           var formData = new FormData($("#Formulario")[0]);
+     
+           $.ajax({
+             type: "POST",
+             url: "enviar.php",
+             data: formData,
+             processData: false,
+             contentType: false,
+             success: function (response) {
+               // Manejar la respuesta del servidor
+               console.log(response);
+     
+               // Mostrar mensaje de éxito con SweetAlert2
+               Swal.fire({
+                 icon: 'success',
+                 title: 'Mensaje enviado correctamente',
+                 showConfirmButton: false,
+                 timer: 1500
+               });
+     
+               limpiarCampos();
+               // Mostrar la ventana emergente
+     
+             },
+             error: function (error) {
+               // Manejar errores
+               console.error(error);
+             }
+           });
+         }
+     
+     
+     
+         function mostrarPopup() {
+           document.getElementById('popup').style.display = 'block';
+         }
+     
+         function cerrarPopup() {
+           document.getElementById('popup').style.display = 'none';
+         }
+     
+         function limpiarCampos() {
+           // Limpiar los valores de los campos del formulario
+           // Obtener el formulario por su ID
+           var formulario = document.getElementById("Formulario");
+     
+           // Resetear el formulario
+           formulario.reset();
+         }  
+       </script>
    </body>
 </html>
