@@ -208,6 +208,12 @@
                              // Clear form fields
                              document.getElementById("contact-form").reset();
                          } else {
+                              Swal.fire({
+                                 title: "¡Error al enviar el mensaje!",
+                                 text: "Parece que hubo un error al enviar el formulario",
+                                 icon: "error",
+                                 confirmButtonText: "Cerrar",
+                              });
                              // Show error message with SweetAlert2 (optional)
                              // You can implement an error message here
                          }
