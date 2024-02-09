@@ -64,7 +64,9 @@ if (!empty($_FILES['adjunto']['name'])) {
 
     // Agregar el archivo adjunto al correo
     $mail->addAttachment($ruta_destino);
-}
+    }
+
+    try{
 
     // Send email to Zoho
     $mail->send();
@@ -79,6 +81,11 @@ if (!empty($_FILES['adjunto']['name'])) {
 
     // Send successful response to AJAX request
     echo "Mensaje enviado correctamente";
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo "Error al enviar el mensaje";
+    exit();
+    }
 }else {
     // Redirigir si no es una solicitud POST
     header("Location: contact.html");
